@@ -23,9 +23,7 @@ S = "${WORKDIR}/git/server"
 FILES:${PN} += "${bindir}/aesdsocket"
 # TODO: customize these as necessary for any libraries you need for your application
 # (and remove comment)
-TARGET_CC_ARCH += "${LDFLAGS}"
 TARGET_LDFLAGS += "-pthread -lrt"
-TARGET_LDFLAGS += " -Wl,--hash-style=gnu"
 INITSCRIPT_PACKAGES="${PN}"
 INITSCRIPT_NAME:${PN}="aesdsocket-start-stop"
 
