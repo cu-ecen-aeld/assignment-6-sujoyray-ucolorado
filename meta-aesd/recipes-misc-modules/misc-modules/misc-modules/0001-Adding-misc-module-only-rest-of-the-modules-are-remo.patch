@@ -1,0 +1,24 @@
+From 9e1db005ea65ff93b841caa564ea86c100407e66 Mon Sep 17 00:00:00 2001
+From: Sujoy Ray <sujoy.ray@colorado.edu>
+Date: Sun, 12 Mar 2023 11:29:28 -0700
+Subject: [PATCH] Adding misc module only, rest of the modules are removed
+
+Signed-off-by: Sujoy Ray <sujoy.ray@colorado.edu>
+---
+ Makefile | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 7b08c49..0966da5 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,8 +1,5 @@
+ 
+-SUBDIRS =  misc-progs misc-modules \
+-           skull scull scullc scullp lddbus sculld scullv shortprint simple tty \
+-	   pci usb\
+-	   sbull snull short
++SUBDIRS =  misc-modules
+ 
+ all: subdirs
+ 

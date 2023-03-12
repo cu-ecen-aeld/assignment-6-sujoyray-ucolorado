@@ -1,0 +1,105 @@
+#!/bin/sh
+#/*****************************************************************************
+#* Copyright (C) 2023 by Sujoy Ray
+#*
+#* Redistribution, modification or use of this software in source or binary
+#* forms is permitted as long as the files maintain this copyright. Users are
+#* permitted to modify this and use it to learn about the field of embedded
+#* software. Sujoy Ray and the University of Colorado are not liable for
+#* any misuse of this material.
+#*
+#*****************************************************************************/
+#/**
+#* @file  S98lddmodules
+#* @brief : The script is responsible to start and stop the hello and faulty modules
+#*
+#* @author Sujoy Ray
+#* @date March 11, 2023
+#* @version 1.0
+#* CREDIT: Header credit: University of Colorado coding standard
+#* CREDIT: Based on https://github.com/cu-ecen-aeld/ldd3/blob/master/scull/scull_unload#L8 and
+#*         https://github.com/cu-ecen-aeld/ldd3/blob/master/scull/scull_load
+#*
+#*/
+
+function unload_hello_module() {
+
+    # invoke rmmod with all arguments we got
+    rmmod -f $module $* || exit 1
+}
+
+function load_hello_module() {
+
+    insmod /lib/modules/5.15.91-yocto-standard/extra/misc-modules/$module.ko $* || exit 1
+}
+
+function unload_faulty_module() {
+    # invoke rmmod with all arguments we got
+    rmmod -f $module $* || exit 1
+
+    # Remove stale nodes
+
+    rm -f /dev/${device}  
+}
+
+function load_faulty_module() {
+
+    insmod /lib/modules/5.15.91-yocto-standard/extra/misc-modules/$module.ko $* || exit 1
+
+    # retrieve major number
+    major=$(awk "\$2==\"$module\" {print \$1}" /proc/devices)
+
+    # Remove stale nodes and replace them, then give gid and perms
+    # Usually the script is shorter, it's scull that has several devices in it.
+
+    rm -f /dev/${device}
+    mknod /dev/${device} c $major 0
+    chgrp $group /dev/${device}
+    chmod $mode  /dev/${device}
+
+}
+
+
+# $Id: scull_load,v 1.4 2004/11/03 06:19:49 rubini Exp $
+
+# Group: since distributions do it differently, look for wheel or use staff
+if grep -q '^staff:' /etc/group; then
+    group="staff"
+else
+    group="wheel"
+fi
+
+# invoke insmod with all arguments we got
+# and use a pathname, as insmod doesn't look in . by default
+
+
+case "$1" in
+  start)
+    module="faulty"
+    device="faulty"
+    mode="664"
+    echo "Invoking $module ..."
+    load_faulty_module
+    module="hello"
+    device="hello"
+    mode="664"
+    echo "Invoking $module ..."
+    load_hello_module
+
+    ;;
+  stop)
+    module="faulty"
+    device="faulty"
+    echo "Unloading $module ..."
+    unload_faulty_module
+    module="hello"
+    echo "Unloading $module ..."
+    unload_hello_module
+    ;;
+  *)
+    echo "Usage : $0 {start | stop}"
+    exit 1;
+   ;;
+esac
+exit 0;
+

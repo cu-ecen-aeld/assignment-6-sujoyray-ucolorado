@@ -1,0 +1,24 @@
+From b8fed5427e10a0680b6ed3c70071f0b344f8a3c0 Mon Sep 17 00:00:00 2001
+From: Sujoy Ray <sujoy.ray@colorado.edu>
+Date: Sun, 12 Mar 2023 10:43:12 -0700
+Subject: [PATCH] Updating the makefile to build scull
+
+Signed-off-by: Sujoy Ray <sujoy.ray@colorado.edu>
+---
+ Makefile | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 7b08c49..f5c868e 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,8 +1,5 @@
+ 
+-SUBDIRS =  misc-progs misc-modules \
+-           skull scull scullc scullp lddbus sculld scullv shortprint simple tty \
+-	   pci usb\
+-	   sbull snull short
++SUBDIRS =  scull scullc scullp sculld scullv 
+ 
+ all: subdirs
+ 

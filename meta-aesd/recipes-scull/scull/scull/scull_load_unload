@@ -1,0 +1,120 @@
+#!/bin/sh
+#/*****************************************************************************
+#* Copyright (C) 2023 by Sujoy Ray
+#*
+#* Redistribution, modification or use of this software in source or binary
+#* forms is permitted as long as the files maintain this copyright. Users are
+#* permitted to modify this and use it to learn about the field of embedded
+#* software. Sujoy Ray and the University of Colorado are not liable for
+#* any misuse of this material.
+#*
+#*****************************************************************************/
+#/**
+#* @file  S98lddmodules
+#* @brief : The script is responsible to start and stop the scull modules
+#*
+#* @author Sujoy Ray
+#* @date March 11, 2023
+#* @version 1.0
+#* CREDIT: Header credit: University of Colorado coding standard
+#* CREDIT: Based on https://github.com/cu-ecen-aeld/ldd3/blob/master/scull/scull_unload#L8 and
+#*         https://github.com/cu-ecen-aeld/ldd3/blob/master/scull/scull_load
+#*
+#*/
+
+function unload_scull_module() {
+    # invoke rmmod with all arguments we got
+    rmmod -f $module $* || exit 1
+
+    # Remove stale nodes
+
+    rm -f /dev/${device} /dev/${device}[0-3] 
+    rm -f /dev/${device}priv
+    rm -f /dev/${device}pipe /dev/${device}pipe[0-3]
+    rm -f /dev/${device}single
+    rm -f /dev/${device}uid
+    rm -f /dev/${device}wuid
+}
+
+function load_scull_module() {
+    insmod /lib/modules/5.15.91-yocto-standard/extra/$module.ko $* || exit 1
+
+    # retrieve major number
+    major=$(awk "\$2==\"$module\" {print \$1}" /proc/devices)
+
+    # Remove stale nodes and replace them, then give gid and perms
+    # Usually the script is shorter, it's scull that has several devices in it.
+
+    rm -f /dev/${device}[0-3]
+    mknod /dev/${device}0 c $major 0
+    mknod /dev/${device}1 c $major 1
+    mknod /dev/${device}2 c $major 2
+    mknod /dev/${device}3 c $major 3
+    ln -sf ${device}0 /dev/${device}
+    chgrp $group /dev/${device}[0-3] 
+    chmod $mode  /dev/${device}[0-3]
+
+    rm -f /dev/${device}pipe[0-3]
+    mknod /dev/${device}pipe0 c $major 4
+    mknod /dev/${device}pipe1 c $major 5
+    mknod /dev/${device}pipe2 c $major 6
+    mknod /dev/${device}pipe3 c $major 7
+    ln -sf ${device}pipe0 /dev/${device}pipe
+    chgrp $group /dev/${device}pipe[0-3] 
+    chmod $mode  /dev/${device}pipe[0-3]
+
+    rm -f /dev/${device}single
+    mknod /dev/${device}single  c $major 8
+    chgrp $group /dev/${device}single
+    chmod $mode  /dev/${device}single
+
+    rm -f /dev/${device}uid
+    mknod /dev/${device}uid   c $major 9
+    chgrp $group /dev/${device}uid
+    chmod $mode  /dev/${device}uid
+
+    rm -f /dev/${device}wuid
+    mknod /dev/${device}wuid  c $major 10
+    chgrp $group /dev/${device}wuid
+    chmod $mode  /dev/${device}wuid
+
+    rm -f /dev/${device}priv
+    mknod /dev/${device}priv  c $major 11
+    chgrp $group /dev/${device}priv
+    chmod $mode  /dev/${device}priv
+}
+
+# $Id: scull_load,v 1.4 2004/11/03 06:19:49 rubini Exp $
+
+# Group: since distributions do it differently, look for wheel or use staff
+if grep -q '^staff:' /etc/group; then
+    group="staff"
+else
+    group="wheel"
+fi
+
+# invoke insmod with all arguments we got
+# and use a pathname, as insmod doesn't look in . by default
+
+
+case "$1" in
+  start)
+    module="scull"
+    device="scull"
+    mode="664"
+    echo "Invoking $module ..."
+    load_scull_module
+    ;;
+  stop)
+    module="scull"
+    device="scull"
+    echo "Unloading $module ..."
+    unload_scull_module
+    ;;
+  *)
+    echo "Usage : $0 {start | stop}"
+    exit 1;
+   ;;
+esac
+exit 0;
+
